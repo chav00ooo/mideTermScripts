@@ -3,7 +3,8 @@ import time
 
 # Configuration
 TARGETS = ['127.0.0.1', 'scanme.nmap.org']
-PORT_RANGE = range(20, 1025)  # Ports to scan
+PORT_RANGE = [21, 22, 80, 443]
+  # Ports to scan
 DELAY = 0.5  # Delay between scan attempts
 
 def scan_ports(target):
@@ -27,3 +28,18 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Unexpected error: {e}")
 
+import socket
+import time
+from datetime import datetime
+
+# Configuration
+TARGETS = ['127.0.0.1', 'scanme.nmap.org']  # Allowed targets
+PORT_RANGE = range(20, 1025)  # Default port range to scan
+DELAY = 0.5  # Delay between scan attempts
+
+def scan_ports(target, ports):
+    """
+    Scans a specified range of ports on a target host.
+    """
+    print(f"[{datetime.now()}] Scanning target: {target}")
+   
