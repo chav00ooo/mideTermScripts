@@ -20,6 +20,10 @@ try:
         client_socket, client_address = server_socket.accept()
         print("Connected from: ", client_address)
         
+        # Receive and print the message from the client
+        client_message = client_socket.recv(1024).decode()
+        print(f"Client says: {client_message}")
+        
         # Send a message to the client
         message = "Hello, how are you?"
         client_socket.send(message.encode())
