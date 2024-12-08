@@ -1,0 +1,29 @@
+import socket
+import time
+
+# Configuration
+TARGETS = ['127.0.0.1', 'scanme.nmap.org']
+PORT_RANGE = range(20, 1025)  # Ports to scan
+DELAY = 0.5  # Delay between scan attempts
+
+def scan_ports(target):
+    print(f"Scanning target: {target}")
+    for port in PORT_RANGE:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)  # Set a timeout for each connection attempt
+            result = s.connect_ex((target, port))  # Try to connect to the port
+            if result == 0:
+                print(f"Port {port}: Open")
+            else:
+                print(f"Port {port}: Closed")
+        time.sleep(DELAY)  # Respect rate limits
+
+if __name__ == "__main__":
+    for target in TARGETS:
+        try:
+            scan_ports(target)
+        except socket.gaierror:
+            print(f"Error: Unable to resolve {target}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+
