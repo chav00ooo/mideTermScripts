@@ -1,45 +1,83 @@
 import socket
-import time
+from datetime import datetime
+import time  # Import the time module for performance measurement
 
-# Configuration
-TARGETS = ['127.0.0.1', 'scanme.nmap.org']
-PORT_RANGE = [21, 22, 80, 443]
-  # Ports to scan
-DELAY = 0.5  # Delay between scan attempts
+# Configuration section
+TARGETS = ['127.0.0.1']  # List of allowed targets to scan (e.g., localhost or specific hosts)
+PORT_RANGE = range(25, 65000)  # Range of ports to scan, from port 25 to 64999
+
+def resolve_host(target):
+    """
+    Resolves the target hostname or IP address.
+    If the resolution is successful, the function returns the IP address.
+    If resolution fails, it raises a ValueError with an appropriate message.
+    """
+    try:
+        # Attempt to resolve the hostname to an IP address
+        resolved_ip = socket.gethostbyname(target)
+        print(f"[{datetime.now()}] Resolved {target} to {resolved_ip}")
+        return resolved_ip
+    except socket.gaierror:
+        # Handle errors that occur if the hostname cannot be resolved
+        raise ValueError(f"Unable to resolve host: {target}")
 
 def scan_ports(target):
-    print(f"Scanning target: {target}")
-    for port in PORT_RANGE:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(1)  # Set a timeout for each connection attempt
-            result = s.connect_ex((target, port))  # Try to connect to the port
-            if result == 0:
-                print(f"Port {port}: Open")
-            else:
-                print(f"Port {port}: Closed")
-        time.sleep(DELAY)  # Respect rate limits
-
-if __name__ == "__main__":
-    for target in TARGETS:
-        try:
-            scan_ports(target)
-        except socket.gaierror:
-            print(f"Error: Unable to resolve {target}")
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-
-import socket
-import time
-from datetime import datetime
-
-# Configuration
-TARGETS = ['127.0.0.1', 'scanme.nmap.org']  # Allowed targets
-PORT_RANGE = range(20, 1025)  # Default port range to scan
-DELAY = 0.5  # Delay between scan attempts
-
-def scan_ports(target, ports):
     """
-    Scans a specified range of ports on a target host.
+    Scans the specified range of ports on the given target host.
+    For each port, it attempts to establish a connection and reports whether the port is open or closed.
     """
     print(f"[{datetime.now()}] Scanning target: {target}")
-   
+    for port in PORT_RANGE:
+        # Create a socket object for each port scan
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)  # Set a timeout of 1 second for the connection attempt
+            try:
+                # Try connecting to the specified port on the target
+                result = s.connect_ex((target, port))  # Returns 0 if the port is open, otherwise an error code
+                status = "Open" if result == 0 else "Closed"
+                print(f"[{datetime.now()}] Port {port}: {status}")
+            except Exception as e:
+                # Handle unexpected errors during the scanning process
+                print(f"[{datetime.now()}] Error scanning port {port} on {target}: {e}")
+
+if __name__ == "__main__":
+    try:
+        # Validate the configuration of the port range
+        if not isinstance(PORT_RANGE, (range, list)):
+            raise ValueError("Port range must be a range or a list of integers.")
+        if isinstance(PORT_RANGE, range):
+            # Ensure the range is within valid port numbers (0-65535)
+            if min(PORT_RANGE) < 0 or max(PORT_RANGE) > 65535:
+                raise ValueError("Port range must be within 0-65535.")
+        elif isinstance(PORT_RANGE, list):
+            # Validate that each port in the list is within the valid range
+            if any(p < 0 or p > 65535 for p in PORT_RANGE):
+                raise ValueError("Port range contains invalid port numbers (must be within 0-65535).")
+        
+        # Start scanning each target in the TARGETS list
+        for target in TARGETS:
+            try:
+                # Attempt to resolve the target hostname to an IP address
+                resolved_target = resolve_host(target)
+                
+                # Measure the time taken for the port scan
+                start_time = time.perf_counter()
+                scan_ports(resolved_target)  # Perform the port scan on the resolved IP
+                end_time = time.perf_counter()
+                
+                # Calculate and print the elapsed time for scanning
+                elapsed_time = end_time - start_time
+                print(f"[{datetime.now()}] Time taken to scan {len(PORT_RANGE)} ports on {target}: {elapsed_time:.2f} seconds")
+            
+            except ValueError as ve:
+                # Handle validation errors such as unreachable targets
+                print(f"[{datetime.now()}] {ve}")
+            except Exception as e:
+                # Handle any unexpected errors during scanning
+                print(f"[{datetime.now()}] Unexpected error: {e}")
+    except ValueError as ve:
+        # Handle configuration errors (e.g., invalid port range)
+        print(f"[{datetime.now()}] Invalid configuration: {ve}")
+    except Exception as e:
+        # Catch and report any other unexpected errors
+        print(f"[{datetime.now()}] Unexpected error in script: {e}")
