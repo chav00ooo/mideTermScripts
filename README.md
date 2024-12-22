@@ -24,7 +24,7 @@ The Vulnerability Scanner is a Python-based tool designed to automate the proces
    ```
 2. Ensure the `vulnerability_db.json` file exists in the same directory and contains up-to-date vulnerabilities. Example:
    ```json
-   
+   }
     "22": ["CVE-2020-15778: SSH command injection vulnerability"],
     "80": ["CVE-2021-44228: Log4j vulnerability in HTTP servers"],
     "443": ["CVE-2022-0778: OpenSSL infinite loop vulnerability"],
